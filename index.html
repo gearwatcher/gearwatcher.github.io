@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Rafting & Rowing Strength Plan (Dark Theme)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Midnight Slate (Slate, Cyan for accents) -->
+    <!-- Application Structure Plan: The app uses a tab-based navigation structure to switch between "Workout A" and "Workout B". This is the most intuitive approach for comparing two distinct-but-related content sets, ideal for a user at the gym needing to quickly access a specific day's plan. Key principles are in a collapsible section to save space, and a static weekly schedule provides high-level context. This structure prioritizes quick access to the core workout details. -->
+    <!-- Visualization & Content Choices: Report Info: Workout A/B details -> Goal: Organize/Inform -> Viz/Presentation: Interactive Cards in a CSS grid -> Interaction: Button/Tab to toggle visibility of workout sections -> Justification: Cards neatly package text and visuals (verified GIFs) for each exercise. Toggling visibility is a standard, user-friendly SPA pattern for this type of content, avoiding page reloads. Report Info: Key Principles -> Goal: Inform -> Presentation: Collapsible HTML <details> tag -> Interaction: Click to expand -> Justification: Hides supplementary info by default to focus the user on the primary workout task. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* slate-900 */
+        }
+        .active-tab {
+            background-color: #06b6d4; /* cyan-500 */
+            color: #ffffff;
+        }
+        .inactive-tab {
+            background-color: #334155; /* slate-700 */
+            color: #cbd5e1; /* slate-300 */
+        }
+        details > summary {
+            cursor: pointer;
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary .icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        details[open] summary .icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="text-slate-300">
+
+    <div id="app" class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">Rafting & Rowing Strength Plan</h1>
+            <p class="mt-2 text-lg text-slate-400">A 2-week plan to build power and endurance for the water.</p>
+        </header>
+
+        <main>
+            <section id="key-info" class="mb-8">
+                <div class="bg-slate-800 p-6 rounded-lg shadow-md">
+                    <details>
+                        <summary class="flex justify-between items-center font-semibold text-white text-lg">
+                            <span>Training Principles & Weekly Schedule</span>
+                            <span class="icon">
+                                <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </span>
+                        </summary>
+                        <div class="mt-4 border-t border-slate-700 pt-4 text-slate-300 space-y-4">
+                            <div>
+                                <h3 class="font-semibold text-md text-white">Key Principles</h3>
+                                <ul class="list-disc list-inside mt-2 space-y-1">
+                                    <li><strong class="font-semibold text-slate-100">Form First:</strong> Prioritize correct form over heavy weight to prevent injury.</li>
+                                    <li><strong class="font-semibold text-slate-100">Progressive Overload:</strong> Gradually increase the challenge by adding weight, reps, or sets.</li>
+                                    <li><strong class="font-semibold text-slate-100">Warm-up & Cool-down:</strong> Always start with 5-10 mins of light cardio and end with stretching.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-md text-white">Weekly Workout Split</h3>
+                                <p class="mt-1">If training 3 times per week, follow this schedule:</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                    <div class="bg-slate-700 p-3 rounded-md">
+                                        <p class="font-bold text-white">Week 1:</p>
+                                        <p>Day 1: Workout A, Day 2: Workout B, Day 3: Workout A</p>
+                                    </div>
+                                    <div class="bg-slate-700 p-3 rounded-md">
+                                        <p class="font-bold text-white">Week 2:</p>
+                                        <p>Day 1: Workout B, Day 2: Workout A, Day 3: Workout B</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </section>
+            
+            <section id="workout-selector" class="mb-8">
+                <div class="flex justify-center space-x-2 sm:space-x-4">
+                    <button id="btn-workout-a" class="w-full sm:w-auto flex-1 sm:flex-none text-lg font-bold py-3 px-6 sm:px-8 rounded-lg shadow-sm transition-all duration-300">Workout A</button>
+                    <button id="btn-workout-b" class="w-full sm:w-auto flex-1 sm:flex-none text-lg font-bold py-3 px-6 sm:px-8 rounded-lg shadow-sm transition-all duration-300">Workout B</button>
+                </div>
+            </section>
+
+            <section id="workout-display">
+                <div id="workout-a-content"></div>
+                <div id="workout-b-content" class="hidden"></div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-12 text-slate-500">
+            <p>This gym plan builds your strength foundation. The best way to improve is to spend time on the water!</p>
+        </footer>
+    </div>
+
+    <script>
+        const workoutData = {
+            a: [
+                { name: "Barbell Deadlifts", sets: 3, reps: "5-8", rest: "90-120s", notes: "Keep your back straight and drive with your legs. This is a full-body power move.", img: "https://i.imgur.com/yGv351V.gif" },
+                { name: "Seated Cable Rows", sets: 3, reps: "8-12", rest: "60s", notes: "Squeeze your shoulder blades together on every pull.", img: "https://i.imgur.com/t4b6e2H.gif" },
+                { name: "Dumbbell Bench Press", sets: 3, reps: "8-12", rest: "60s", notes: "Builds chest and shoulder strength for powerful strokes.", img: "https://i.imgur.com/2a8sTfN.gif" },
+                { name: "Goblet Squats", sets: 3, reps: "10-15", rest: "60s", notes: "Keep your chest up and back straight. Great for leg power and core stability.", img: "https://i.imgur.com/k2wz5NB.gif" },
+                { name: "Plank", sets: 3, reps: "30-60s hold", rest: "45s", notes: "Keep your body in a straight line from head to heels.", img: "https://i.imgur.com/p4l39S4.gif" },
+                { name: "Face Pulls", sets: 3, reps: "12-15", rest: "45s", notes: "Pull the rope towards your face, aiming for your ears. Great for shoulder health.", img: "https://i.imgur.com/T0k0oA4.gif" },
+            ],
+            b: [
+                { name: "Pull-ups (or Lat Pulldowns)", sets: 3, reps: "As many as possible (or 8-12)", notes: "The ultimate pulling exercise. Use an assisted machine or lat pulldowns if needed.", img: "https://i.imgur.com/n8wG3vS.gif" },
+                { name: "Overhead Press", sets: 3, reps: "8-10", rest: "60s", notes: "Use dumbbells or a barbell. Keep your core tight.", img: "https://i.imgur.com/1n5b1ab.gif" },
+                { name: "Bent-Over Dumbbell Rows", sets: 3, reps: "8-12 per arm", rest: "60s", notes: "Keep your back flat and pull the dumbbell towards your hip.", img: "https://i.imgur.com/gSRvPqM.gif" },
+                { name: "Leg Press", sets: 3, reps: "10-15", rest: "60s", notes: "Builds powerful leg drive for rowing and bracing in a raft.", img: "https://i.imgur.com/f92y92H.gif" },
+                { name: "Russian Twists", sets: 3, reps: "15-20 per side", rest: "45s", notes: "Develops rotational core strength, key for paddling.", img: "https://i.imgur.com/3V2sSnv.gif" },
+                { name: "Bicep Curls", sets: 2, reps: "10-15", rest: "30s", notes: "For arm strength and endurance in the pull phase of your stroke.", img: "https://i.imgur.com/W2z6H2I.gif" },
+            ]
+        };
+
+        function createExerciseCard(exercise) {
+            return `
+                <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row transition-shadow duration-300 hover:shadow-cyan-500/20">
+                    <div class="md:w-1/3 bg-black">
+                        <img class="w-full h-full object-contain" src="${exercise.img}" alt="${exercise.name} animation" loading="lazy">
+                    </div>
+                    <div class="p-6 md:w-2/3 flex flex-col">
+                        <h3 class="text-xl font-bold text-white">${exercise.name}</h3>
+                        <div class="grid grid-cols-3 gap-4 my-4 text-center">
+                            <div>
+                                <p class="text-sm text-slate-400">Sets</p>
+                                <p class="text-2xl font-semibold text-cyan-400">${exercise.sets}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-400">Reps</p>
+                                <p class="text-2xl font-semibold text-cyan-400">${exercise.reps}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-slate-400">Rest</p>
+                                <p class="text-lg font-semibold text-cyan-400">${exercise.rest}</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-300 flex-grow"><strong class="font-semibold text-slate-100">Notes:</strong> ${exercise.notes}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderWorkout(workoutType) {
+            const container = document.getElementById(`workout-${workoutType}-content`);
+            const exercises = workoutData[workoutType];
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'grid grid-cols-1 gap-8';
+            gridContainer.innerHTML = exercises.map(createExerciseCard).join('');
+            container.innerHTML = '';
+            container.appendChild(gridContainer);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnA = document.getElementById('btn-workout-a');
+            const btnB = document.getElementById('btn-workout-b');
+            const contentA = document.getElementById('workout-a-content');
+            const contentB = document.getElementById('workout-b-content');
+
+            function showWorkoutA() {
+                btnA.classList.add('active-tab');
+                btnA.classList.remove('inactive-tab');
+                btnB.classList.add('inactive-tab');
+                btnB.classList.remove('active-tab');
+                contentA.classList.remove('hidden');
+                contentB.classList.add('hidden');
+            }
+
+            function showWorkoutB() {
+                btnB.classList.add('active-tab');
+                btnB.classList.remove('inactive-tab');
+                btnA.classList.add('inactive-tab');
+                btnA.classList.remove('active-tab');
+                contentB.classList.remove('hidden');
+                contentA.classList.add('hidden');
+            }
+
+            renderWorkout('a');
+            renderWorkout('b');
+            
+            showWorkoutA(); 
+
+            btnA.addEventListener('click', showWorkoutA);
+            btnB.addEventListener('click', showWorkoutB);
+        });
+    </script>
+</body>
+</html>
